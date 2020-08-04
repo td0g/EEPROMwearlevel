@@ -1,7 +1,4 @@
 /*
-Issues:
-  If EEPROM isn't cleared, issues may occur when finding last entry
-
 Function:
   The library takes an allocated area of EEPROM (the entire memory by default) and divides it into BLOCKS
   Each block contains DATA and a CHECK INDEX
