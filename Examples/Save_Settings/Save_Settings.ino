@@ -30,10 +30,11 @@ CHANGELOG
 #include "EEPROMlevel.h"
 #define ARRAY_SIZE 1
 uint8_t data[ARRAY_SIZE];
-EEPROMlevel mem(val, ARRAY_SIZE, 0);
+EEPROMlevel mem(data, ARRAY_SIZE, 0);
 
 void setup() {
   Serial.begin(9600);
+  mem.load();
   printSettings();
 }
 
@@ -45,20 +46,19 @@ void loop() {
       thisSetting -= 'a';
       bitClear(data[0],(int)thisSetting);
       printSettings();
-      mem.update(); //Don't need to check if the settings have changed, this will do it for us
+      mem.save(); //Don't need to check if the settings have changed, this will do it for us
     }
     else if (thisSetting >= 'A' and thisSetting <= 'H'){
       thisSetting -= 'A';
       bitSet(data[0],(int)thisSetting);
       printSettings();
-      mem.update(); //Don't need to check if the settings have changed, this will do it for us
+      mem.save(); //Don't need to check if the settings have changed, this will do it for us
     }
   }
 }
 
 void printSettings(){
-  Serial.print("Settings: ");
-  for (byte i = 0; i < 8; i++){
+  for (byte i = 0; i < 7; i++){
     char c;
     if (data[0] & (1 << i))c = 'A' + i;
     else c = 'a' + i;
