@@ -29,7 +29,7 @@ CHANGELOG
 #include "EEPROMlevel.h"
 #define ARRAY_SIZE 4
 uint8_t data[ARRAY_SIZE];
-EEPROMlevel mem(val, ARRAY_SIZE, 4);
+EEPROMlevel mem(data, ARRAY_SIZE, 4);
 
 unsigned long timer;
 
@@ -56,20 +56,22 @@ void loop() {
 //If serial character is recieved, then send the entire available history
   if (Serial.available()){
     while (Serial.available()) Serial.read();
-    for (int i = 0; i < mem.getBlockCount(); i++){
-      Serial.print("Entry #: ");
-      Serial.print(mem.getTotalEntryCount - i);
-      mem.load(i * -1);
-      unsigned int sig = data[1];
-      sig <<= 8;
-      sig |= data[0];
-      Serial.print("   A0: ");
-      Serial.print(sig);
-      sig = data[2];
-      sig <<= 8;
-      sig |= data[3];
-      Serial.print("   A1: ");
-      Serial.println(sig);
+    for (int i = 0; i < mem.getTotalBlocks(); i++){
+      if (i <= mem.getTotalEntryCount()){
+        Serial.print("Entry #: ");
+        Serial.print(mem.getTotalEntryCount() - i);
+        mem.load(i * -1);
+        unsigned int sig = data[0];
+        sig <<= 8;
+        sig |= data[1];
+        Serial.print("   A0: ");
+        Serial.print(sig);
+        sig = data[2];
+        sig <<= 8;
+        sig |= data[3];
+        Serial.print("   A1: ");
+        Serial.println(sig);
+      }
     }
   }
 }
