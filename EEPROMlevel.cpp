@@ -29,17 +29,22 @@ void EEPROMlevel::load(int16_t age){
 }
 
 void EEPROMlevel::save(){
-	uint16_t currBlock = writeHeadLocation();
-	uint8_t checkBit = 0b10000000 - (EEPROM.read(currBlock) & 0b10000000);	//Is the check bit set?
-	for (int i = 0; i < _blockSize; i++){
-		if (!i) {
-		  EEPROM.update(i + currBlock, (_data[i] & 0b01111111) | checkBit);	//If this is the check byte, set/clear the check bit
+  uint16_t currBlock = writeHeadLocation();
+  uint8_t checkBit = 0b10000000 - (EEPROM.read(currBlock) & 0b10000000);	//Is the check bit set?
+  for (int i = 0; i < _blockSize; i++){
+    if (!i) {
+      EEPROM.update(i + currBlock, (_data[i] & 0b01111111) | checkBit);	//If this is the check byte, set/clear the check bit
       if (currBlock + _blockSize > _start + _blockSize * _blockCount){
         if ((EEPROM.read(currBlock + _blockSize) & 0b10000000) == checkBit) EEPROM.write(currBlock + _blockSize, 128 - checkBit);
       }
-		}
-		else EEPROM.update(i + currBlock, _data[i]);	//Update the byte, repeart for the entire block
-	}
+    }
+    else EEPROM.update(i + currBlock, _data[i]);	//Update the byte, repeart for the entire block
+  }
+  if (readHeadLocation() != currBlock){ //Now make sure that the next block doesn't have the same checkbit!
+    if (currBlock + _blockSize < _start + _blockSize * _blockCount){
+      EEPROM.write(currBlock + _blockSize, ~checkBit);
+    }
+  }
   if (_indexSize && writeHeadLocation() == _start){
     uint32_t index = getLastIndex() + 1;
     for (int i = 0; i < _indexSize; i++){
@@ -51,30 +56,30 @@ void EEPROMlevel::save(){
 
 void EEPROMlevel::update(){
   uint16_t currBlock = readHeadLocation();
-	uint8_t checkBit = EEPROM.read(readHeadLocation()) & 0b10000000;	//Is the check bit set?
-	for (int i = 0; i < _blockSize; i++){
+  uint8_t checkBit = EEPROM.read(readHeadLocation()) & 0b10000000;	//Is the check bit set?
+  for (int i = 0; i < _blockSize; i++){
     uint8_t mask = 0b11111111;
     if (!i && !_indexSize) mask = 0b01111111;
     if ((EEPROM.read(currBlock + i) & mask) != (_data[i] & mask)){
       save();
       return;
     }
-	}
+  }
 }
 
 
 uint16_t EEPROMlevel::writeHeadLocation(){
   uint8_t a = EEPROM.read(_start) & 0b10000000;	//Is the check bit set for the first block? 
   for (int i = 1; i < _blockCount; i++){
-	  if ((EEPROM.read(_start + i * _blockSize) & 0b10000000) != a) return _start + i * _blockSize;	//If the check bit has changed since the last block, return the first block index
+    if ((EEPROM.read(_start + i * _blockSize) & 0b10000000) != a) return _start + i * _blockSize;	//If the check bit has changed since the last block, return the first block index
   }
   return _start; //All check bits match, so return the first block index
 }
 
 uint16_t EEPROMlevel::readHeadLocation(){
-	uint16_t a = writeHeadLocation();
-	if (a == _start) return _start + _blockSize * (_blockCount - 1);	//If saving to first block, then load from the last block
-	return a - _blockSize;	//Otherwise load from the block immediately prior to the saving block
+  uint16_t a = writeHeadLocation();
+  if (a == _start) return _start + _blockSize * (_blockCount - 1);	//If saving to first block, then load from the last block
+  return a - _blockSize;	//Otherwise load from the block immediately prior to the saving block
 }
 
 
