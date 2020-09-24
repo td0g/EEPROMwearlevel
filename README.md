@@ -14,7 +14,7 @@ To find the most recent data, the library examines the check bit of the first bl
 
 ### Storing Settings
 
-Settings which are frequently updated can be saved more often without danger of EEPROM failure.  Using the update() function is particularly useful since the data will only be saved if they have been changed.
+Settings which are frequently updated can be saved more often without danger of EEPROM failure.  The standard Arduino's EEPROM.update() function can handle 8 bits of data, but for larger amounts of data this library may be useful.  Using this library's update() function is particularly useful since the data will only be saved if they have been changed.
 
 ### Datalogging
 
